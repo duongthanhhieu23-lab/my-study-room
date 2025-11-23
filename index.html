@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>阿宴的云端自习室 V2.5</title>
+    <title>阿宴的云端自习室 V2.6</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Sans+SC:wght@400;700&display=swap');
 
@@ -118,6 +118,7 @@
         .btn-start { background: var(--green); color: #2f3542; }
         .btn-stop { background: var(--pink); color: #fff; }
         .btn-giveup { background: #f1f2f6; color: #999; }
+        .btn-backup { background: var(--title-blue); color: #fff; font-size: 14px; padding: 8px 15px;}
         .btn:active { transform: scale(0.95); }
 
         /* 输入框 */
@@ -186,6 +187,17 @@
         }
         .cost { font-weight: bold; color: #ff6b81; background: #fff; padding: 5px 10px; border-radius: 10px; font-size: 12px; }
 
+        /* 备份区域 */
+        .backup-section {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px dashed #eee;
+        }
+        .backup-desc { font-size: 12px; color: #999; margin-bottom: 10px; }
+        #import-area { display: none; margin-top: 15px; }
+        #import-textarea { width: 90%; height: 80px; border: 2px solid var(--blue); border-radius: 10px; padding: 10px; font-size: 12px; }
+
         /* 弹窗 */
         .modal-overlay {
             position: fixed;
@@ -218,7 +230,7 @@
 <body>
 
 <div class="container">
-    <h1>☁️ 阿宴的云端自习室 V2.5 ☁️</h1>
+    <h1>☁️ 阿宴的云端自习室 V2.6 ☁️</h1>
 
     <div class="stats-header">
         <div class="stat-item">
@@ -285,6 +297,20 @@
         <h3>🎁 阿宴的小卖部</h3>
         <div id="shop-list"></div>
     </div>
+
+    <div class="backup-section">
+        <div class="backup-desc">怕数据丢失？这有后悔药！</div>
+        <button class="btn btn-backup" onclick="exportData()">📤 导出(备份)数据</button>
+        <button class="btn btn-backup" onclick="toggleImport()" style="background:#a29bfe;">📥 导入(恢复)数据</button>
+        
+        <div id="import-area">
+            <textarea id="import-textarea" placeholder="把备份的神秘代码粘贴到这里..."></textarea>
+            <div style="margin-top:10px;">
+                <button class="btn btn-start" onclick="importData()" style="padding:8px 15px; font-size:14px;">确定恢复</button>
+                <button class="btn btn-giveup" onclick="toggleImport()" style="padding:8px 15px; font-size:14px;">取消</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="modal-overlay" id="modal" onclick="closeModal()">
@@ -297,7 +323,7 @@
 </div>
 
 <script>
-    // --- 数据初始化 ---
+    // --- 数据初始化 (保持 V2.5 不变) ---
     let data = {
         todayTime: 0,
         totalAccumulatedTime: 0, 
@@ -306,13 +332,12 @@
         dones: [],
         habits: {},
         lastDate: new Date().toDateString(),
-        // ★★★ V2.5 新增：计时器状态保存 ★★★
         timerState: {
             isTiming: false,
-            mode: 'countdown', // 'countdown' or 'countup'
-            endTimeTs: null,   // 倒计时结束时间戳
-            startTimeTs: null, // 正向计时开始时间戳
-            initialMinutes: 25 // 倒计时初始设定分钟数(用于记录)
+            mode: 'countdown', 
+            endTimeTs: null,   
+            startTimeTs: null, 
+            initialMinutes: 25 
         }
     };
 
@@ -355,7 +380,7 @@
         { name: '阿宴的大礼物', cost: 100 }
     ];
 
-    // --- 核心逻辑 ---
+    // --- 核心逻辑 (保持 V2.5 不变) ---
     let currentMode = 'countdown';
     let timerInterval;
     let startTime;
@@ -364,53 +389,42 @@
 
     // --- V2.5 核心：加载与恢复状态 ---
     function loadData() {
-        const saved = localStorage.getItem('ayan_study_room_v2_5'); // 更新存储键名以防冲突
+        const saved = localStorage.getItem('ayan_study_room_v2_6'); // 使用新的存储键名
         if (saved) {
             data = JSON.parse(saved);
-            // 跨天重置
             if (data.lastDate !== new Date().toDateString()) {
                 data.habits = {};
                 data.todayTime = 0;
                 data.lastDate = new Date().toDateString();
-                // 如果跨天了但计时器还在跑，强制重置计时器
                 if (data.timerState.isTiming) {
                     resetTimerState();
                 }
                 saveData();
             }
         }
-
         renderUI();
-
-        // ★★★ 恢复计时器状态 ★★★
         if (data.timerState.isTiming) {
             resumeTimer();
         } else {
-            // 如果没有在计时，确保UI是初始状态
             switchMode(data.timerState.mode || 'countdown');
         }
     }
 
     function saveData() {
-        localStorage.setItem('ayan_study_room_v2_5', JSON.stringify(data));
+        localStorage.setItem('ayan_study_room_v2_6', JSON.stringify(data));
         renderUI();
     }
 
-    // 恢复计时器的核心逻辑
     function resumeTimer() {
         isTiming = true;
         currentMode = data.timerState.mode;
-        
-        // 恢复UI显示
-        switchMode(currentMode, true); // true表示是恢复模式，不重置显示
+        switchMode(currentMode, true); 
         document.getElementById('btn-start').style.display = 'none';
-        
         if (currentMode === 'countdown') {
             endTime = data.timerState.endTimeTs;
             document.getElementById('btn-giveup').style.display = 'inline-block';
             document.getElementById('input-area').style.display = 'none';
             document.getElementById('countdown-doing-msg').style.display = 'block';
-            // 检查是否已经过期
             if (new Date().getTime() > endTime) {
                 finishCountdown();
                 return;
@@ -421,8 +435,6 @@
             document.getElementById('countup-start-msg').style.display = 'none';
             document.getElementById('countup-doing-msg').style.display = 'block';
         }
-
-        // 立即启动定时器
         updateTimer(); 
         timerInterval = setInterval(updateTimer, 1000);
     }
@@ -458,13 +470,12 @@
         });
     }
 
-    // --- 计时器逻辑 ---
+    // --- 计时器逻辑 (保持 V2.5 不变) ---
     function switchMode(mode, isResuming = false) {
         if (isTiming && !isResuming) { alert("正在专注中，不能切换哦~"); return; }
         currentMode = mode;
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.getElementById('tab-' + mode).classList.add('active');
-        
         document.getElementById('mode-countdown').style.display = mode === 'countdown' ? 'block' : 'none';
         document.getElementById('mode-countup').style.display = mode === 'countup' ? 'block' : 'none';
         if (!isResuming) document.getElementById('timer-display').innerText = "00:00";
@@ -473,34 +484,25 @@
     function startTimer() {
         if (isTiming) return;
         const now = new Date().getTime();
-        
         data.timerState.isTiming = true;
         data.timerState.mode = currentMode;
-
         if (currentMode === 'countdown') {
             const minutes = parseInt(document.getElementById('focus-minutes').value);
             if (!minutes || minutes <= 0) return alert("请输入正确时间哦~");
             endTime = now + minutes * 60 * 1000;
-            
-            // 保存状态
             data.timerState.endTimeTs = endTime;
             data.timerState.initialMinutes = minutes;
-
             document.getElementById('btn-giveup').style.display = 'inline-block';
             document.getElementById('input-area').style.display = 'none';
             document.getElementById('countdown-doing-msg').style.display = 'block';
         } else {
             startTime = now;
-            // 保存状态
             data.timerState.startTimeTs = startTime;
-
             document.getElementById('btn-stop').style.display = 'inline-block';
             document.getElementById('countup-start-msg').style.display = 'none';
             document.getElementById('countup-doing-msg').style.display = 'block';
         }
-
-        saveData(); // 立即保存状态到保险柜
-
+        saveData(); 
         isTiming = true;
         document.getElementById('btn-start').style.display = 'none';
         timerInterval = setInterval(updateTimer, 1000);
@@ -527,13 +529,10 @@
 
     function finishCountdown() {
         clearInterval(timerInterval);
-        resetTimerState(); // 清除计时状态
+        resetTimerState(); 
         resetTimerUI();
-
         let minutes = data.timerState.initialMinutes || parseInt(document.getElementById('focus-minutes').value);
-        // 如果是从恢复状态结束的，需要重新读取初始分钟数
         if (!minutes) minutes = 25; 
-
         addTimeAndPoints(minutes, 2);
         showQuote(`专注完成！\n手腕疼不疼？快活动一下！`);
     }
@@ -542,10 +541,8 @@
         clearInterval(timerInterval);
         const now = new Date().getTime();
         const minutes = Math.floor((now - startTime) / (1000 * 60));
-        
-        resetTimerState(); // 清除计时状态
+        resetTimerState(); 
         resetTimerUI();
-
         if (minutes > 0) {
             const points = Math.floor(minutes / 10);
             addTimeAndPoints(minutes, points);
@@ -557,14 +554,14 @@
 
     function resetTimer() {
         clearInterval(timerInterval);
-        resetTimerState(); // 清除计时状态
+        resetTimerState(); 
         resetTimerUI();
         alert("放弃啦？没关系，休息一下再来。");
     }
 
-    // 重置计时器的状态数据
     function resetTimerState() {
         isTiming = false;
+        clearInterval(timerInterval); // 确保清除定时器
         data.timerState = {
             isTiming: false,
             mode: 'countdown',
@@ -575,14 +572,11 @@
         saveData();
     }
 
-    // 重置计时器的UI
     function resetTimerUI() {
         document.getElementById('timer-display').innerText = "00:00";
         document.getElementById('btn-start').style.display = 'inline-block';
         document.getElementById('btn-stop').style.display = 'none';
         document.getElementById('btn-giveup').style.display = 'none';
-        
-        // 恢复输入框和提示语显示
         document.getElementById('input-area').style.display = 'block';
         document.getElementById('countdown-doing-msg').style.display = 'none';
         document.getElementById('countup-start-msg').style.display = 'block';
@@ -596,6 +590,7 @@
         saveData();
     }
 
+    // --- 交互逻辑 (保持 V2.5 不变) ---
     function addTodo() {
         const input = document.getElementById('todo-input');
         if (input.value.trim()) {
@@ -637,6 +632,51 @@
         }
     }
 
+    // --- ★★★ V2.6 新增：导入导出逻辑 ★★★ ---
+    function toggleImport() {
+        const area = document.getElementById('import-area');
+        area.style.display = area.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function exportData() {
+        const dataStr = JSON.stringify(data);
+        // 尝试复制到剪贴板
+        navigator.clipboard.writeText(dataStr).then(() => {
+            alert("备份成功！\n神秘代码已复制到剪贴板。\n请快去粘贴到安全的地方保存！");
+        }, () => {
+             // 如果复制失败（某些浏览器限制），则弹窗显示
+             prompt("复制失败，请手动全选复制下面的代码进行备份：", dataStr);
+        });
+    }
+
+    function importData() {
+        const inputStr = document.getElementById('import-textarea').value;
+        if (!inputStr) return alert("请先粘贴神秘代码哦~");
+        try {
+            const newData = JSON.parse(inputStr);
+            // 简单的格式检查
+            if (!newData.totalAccumulatedTime && newData.totalAccumulatedTime !== 0) throw new Error("格式不对");
+            
+            if(confirm("确定要恢复这份数据吗？当前的数据会被覆盖哦！")) {
+                data = newData;
+                saveData();
+                // 如果恢复的数据正在计时，需要重启计时器
+                if (data.timerState && data.timerState.isTiming) {
+                     resumeTimer();
+                } else {
+                     resetTimerState();
+                     resetTimerUI();
+                }
+                alert("数据恢复成功！欢迎回来！");
+                toggleImport(); // 关闭输入框
+                document.getElementById('import-textarea').value = '';
+            }
+        } catch (e) {
+            alert("恢复失败！代码格式好像不对，请检查一下哦。");
+        }
+    }
+
+    // --- 弹窗 ---
     function showRandomQuote() { showQuote(quotes[Math.floor(Math.random() * quotes.length)]); }
     function showQuote(text) {
         document.getElementById('quote-text').innerText = text;
