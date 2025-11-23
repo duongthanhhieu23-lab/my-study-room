@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>阿宴的云端自习室 V2.5</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Sans+SC:wght@400;700&display=swap');
+
+        :root {
+            --pink: #ffc3d0;
+            --blue: #c6e2ff;
+            --purple: #e2d4f7;
+            --green: #d4f0f0;
+            --yellow: #fff5ba;
+            --text: #57606f;
+            --title-blue: #70a1ff;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--pink) 0%, var(--blue) 100%);
+            color: var(--text);
+            font-family: 'Noto Sans SC', sans-serif;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh; 
+            overflow-y: auto; 
+            box-sizing: border-box;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(255, 182, 193, 0.4);
+            margin-bottom: 50px; 
+        }
+
+        h1, h3 {
+            font-family: 'ZCOOL KuaiLe', cursive;
+            text-align: center;
+            color: var(--title-blue);
+            margin-top: 0;
+        }
+
+        /* 顶部数据栏 */
+        .stats-header {
+            display: flex;
+            justify-content: space-around;
+            background: #fff;
+            padding: 15px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        .stat-item { text-align: center; }
+        .stat-val { font-size: 22px; font-weight: bold; color: #ff6b81; }
+        .stat-label { font-size: 12px; color: #a4b0be; }
+
+        /* 计时器切换 */
+        .timer-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px;
+            background: #f1f2f6;
+            border-radius: 50px;
+            padding: 5px;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .tab-btn {
+            padding: 8px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #999;
+            transition: 0.3s;
+        }
+        .tab-btn.active {
+            background: #fff;
+            color: var(--title-blue);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* 计时器主体 */
+        .timer-section {
+            background: #fff;
+            border-radius: 25px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+            border: 4px dashed var(--title-blue);
+        }
+        
+        #timer-display {
+            font-size: 60px;
+            font-weight: bold;
+            color: var(--title-blue);
+            margin: 20px 0;
+            font-family: monospace;
+        }
+
+        .btn {
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+            margin: 0 5px;
+        }
+        .btn-start { background: var(--green); color: #2f3542; }
+        .btn-stop { background: var(--pink); color: #fff; }
+        .btn-giveup { background: #f1f2f6; color: #999; }
+        .btn:active { transform: scale(0.95); }
+
+        /* 输入框 */
+        .focus-input {
+            padding: 8px;
+            border-radius: 10px;
+            border: 2px solid var(--title-blue);
+            width: 60px;
+            text-align: center;
+            font-size: 16px;
+            color: var(--title-blue);
+            font-weight: bold;
+        }
+
+        /* 板块通用 */
+        .section-box {
+            background: #fff;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* 习惯打卡 */
+        .habit-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+            gap: 12px;
+        }
+        .habit-item {
+            background: #f7f1e3;
+            border-radius: 15px;
+            padding: 15px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        .habit-item.done {
+            background: var(--green);
+            border-color: #7bed9f;
+            transform: translateY(-2px);
+        }
+        .habit-icon { font-size: 28px; display: block; margin-bottom: 8px; }
+        .habit-name { font-size: 13px; font-weight: bold; color: #555; }
+
+        /* Todo List */
+        .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        #todo-input { flex: 1; padding: 12px; border-radius: 15px; border: 2px solid var(--yellow); outline: none; }
+        .btn-add { background: var(--yellow); color: #e1b12c; }
+        .list-item { display: flex; align-items: center; padding: 10px; border-bottom: 1px solid #f1f2f6; }
+        .checkbox { width: 20px; height: 20px; border: 2px solid var(--pink); border-radius: 50%; margin-right: 10px; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+        .checkbox.checked { background: var(--pink); }
+        .checkbox.checked::after { content: '✔'; color: white; font-size: 12px; }
+        .task-text { flex: 1; }
+        .task-text.done { text-decoration: line-through; color: #ccc; }
+
+        /* 商店 */
+        .shop-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff0f3;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 10px;
+        }
+        .cost { font-weight: bold; color: #ff6b81; background: #fff; padding: 5px 10px; border-radius: 10px; font-size: 12px; }
+
+        /* 弹窗 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal {
+            background: #fff;
+            width: 80%;
+            max-width: 400px;
+            padding: 30px;
+            border-radius: 30px;
+            text-align: center;
+            animation: popUp 0.4s;
+            border: 5px solid var(--title-blue);
+        }
+        @keyframes popUp { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .ayan-avatar { width: 80px; height: 80px; background: var(--title-blue); border-radius: 50%; margin: -60px auto 15px; border: 5px solid #fff; font-size: 40px; display: flex; justify-content: center; align-items: center; }
+        #quote-text { font-size: 18px; line-height: 1.6; color: #2f3542; margin-bottom: 20px; }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>☁️ 阿宴的云端自习室 V2.5 ☁️</h1>
+
+    <div class="stats-header">
+        <div class="stat-item">
+            <div class="stat-val" id="today-time">0</div>
+            <div class="stat-label">今日分钟</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-val" id="total-accumulated-time">0</div>
+            <div class="stat-label">累计分钟</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-val" id="points">0</div>
+            <div class="stat-label">小红花</div>
+        </div>
+    </div>
+
+    <div class="timer-tabs">
+        <div class="tab-btn active" id="tab-countdown" onclick="switchMode('countdown')">倒计时(番茄)</div>
+        <div class="tab-btn" id="tab-countup" onclick="switchMode('countup')">正向计时</div>
+    </div>
+
+    <div class="timer-section">
+        <div id="mode-countdown">
+            <div style="margin-bottom:10px;" id="input-area">
+                设定 <input type="number" id="focus-minutes" class="focus-input" value="25" min="1"> 分钟
+            </div>
+            <div style="margin-bottom:10px; display:none; color:var(--title-blue); font-weight:bold;" id="countdown-doing-msg">
+                正在专注中... (刷新也没用哦)
+            </div>
+        </div>
+        <div id="mode-countup" style="display:none; margin-bottom:10px; color:#999;">
+            <div id="countup-start-msg">专注多久，记录多久 (每10分钟+1花)</div>
+            <div style="display:none; color:var(--title-blue); font-weight:bold;" id="countup-doing-msg">
+                正在记录中... (刷新也没用哦)
+            </div>
+        </div>
+
+        <div id="timer-display">00:00</div>
+        
+        <div class="btn-group">
+            <button class="btn btn-start" id="btn-start" onclick="startTimer()">开始专注</button>
+            <button class="btn btn-stop" id="btn-stop" onclick="stopTimer()" style="display:none;">完成/结算</button>
+            <button class="btn btn-giveup" id="btn-giveup" onclick="resetTimer()" style="display:none;">放弃</button>
+        </div>
+    </div>
+
+    <div class="section-box">
+        <h3>📝 Todo List</h3>
+        <div class="input-group">
+            <input type="text" id="todo-input" placeholder="阿宴，我要做...">
+            <button class="btn btn-add" onclick="addTodo()">添加</button>
+        </div>
+        <div id="todo-list"></div>
+        <h4 style="margin-top:20px; color:#ccc;">✅ Done List</h4>
+        <div id="done-list"></div>
+    </div>
+
+    <div class="section-box">
+        <h3>📅 每日乖乖打卡</h3>
+        <div class="habit-grid" id="habit-list"></div>
+    </div>
+
+    <div class="section-box">
+        <h3>🎁 阿宴的小卖部</h3>
+        <div id="shop-list"></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modal" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="ayan-avatar">🧑🏻‍⚕️</div>
+        <h3 id="modal-title">阿宴说：</h3>
+        <p id="quote-text">...</p>
+        <button class="btn btn-start" onclick="closeModal()">收到啦 ❤</button>
+    </div>
+</div>
+
+<script>
+    // --- 数据初始化 ---
+    let data = {
+        todayTime: 0,
+        totalAccumulatedTime: 0, 
+        points: 0,
+        todos: [],
+        dones: [],
+        habits: {},
+        lastDate: new Date().toDateString(),
+        // ★★★ V2.5 新增：计时器状态保存 ★★★
+        timerState: {
+            isTiming: false,
+            mode: 'countdown', // 'countdown' or 'countup'
+            endTimeTs: null,   // 倒计时结束时间戳
+            startTimeTs: null, // 正向计时开始时间戳
+            initialMinutes: 25 // 倒计时初始设定分钟数(用于记录)
+        }
+    };
+
+    const quotes = [
+        "小乖，真棒！我就知道你可以的。", "累了吗？累了就趴一会儿，阿宴把肩膀借给你。",
+        "专注的样子真迷人，想亲一口。", "今天腿抖了吗？不许抖哦，阿宴看着呢。",
+        "今天的灵芝粉吃了吗？苦不苦？", "喝水！现在，立刻，拿起杯子喝一口！",
+        "做得好！奖励你今晚早点睡。", "不许偷偷玩手机哦，监护人看着呢。",
+        "我的小朋友是全世界最厉害的医生。", "完成这个任务，就给你一个大大的拥抱。",
+        "记得活动一下肩膀，那个淤青还没好全呢。", "抬头挺胸！走路要有大将军的气势！",
+        "手腕护具戴好了吗？别让我担心。", "乖，再坚持一下，胜利就在前方。",
+        "你是我的骄傲，无论什么时候都是。", "别皱眉，会有皱纹的（骗你的，还是那么好看）。",
+        "要不要吃颗糖？补充一下多巴胺。", "休息时间到！现在的任务是闭眼发呆五分钟。",
+        "不许熬夜！阿宴会心疼的。", "今天有乖乖吃饭吗？没吃饱不许干活。",
+        "太棒了！阿宴想把你举高高！", "深呼吸，吸气——呼气——放松点。",
+        "要是觉得难，就跟我撒个娇，我帮你分担。", "你的努力，阿宴都看在眼里。",
+        "怎么这么可爱，连学习的时候都这么可爱。", "好了，这个任务结束了，快去奖励自己一下。",
+        "记住，身体第一，学习第二，阿宴...第零。", "再忙也要记得想我哦。",
+        "这就是传说中的‘心流’状态吗？真帅。", "任务完成！快来领赏！"
+    ];
+
+    const habitConfig = [
+        { id: 'water', name: '喝水 2000ml', icon: '💧' },
+        { id: 'med', name: '吃灵芝粉', icon: '💊' },
+        { id: 'fruit', name: '吃水果', icon: '🍎' },
+        { id: 'skincare', name: '护肤/手霜', icon: '🧴' },
+        { id: 'eye1', name: '眼球操(1)', icon: '👀' },
+        { id: 'eye2', name: '眼球操(2)', icon: '👀' },
+        { id: 'leg', name: '不抖腿', icon: '🦵' }, 
+        { id: 'walk', name: '走路姿势', icon: '🚶‍♀️' }, 
+        { id: 'sleep', name: '早睡打卡', icon: '🌙' }
+    ];
+
+    const shopConfig = [
+        { name: '看一集B站/综艺/动漫', cost: 10 },
+        { name: '阿宴买一份零食', cost: 15 },
+        { name: '喝一杯奶茶 (不加冰)', cost: 30 },
+        { name: '今晚不写作业特权', cost: 50 },
+        { name: '阿宴的小礼物', cost: 50 },
+        { name: '阿宴的大礼物', cost: 100 }
+    ];
+
+    // --- 核心逻辑 ---
+    let currentMode = 'countdown';
+    let timerInterval;
+    let startTime;
+    let endTime;
+    let isTiming = false;
+
+    // --- V2.5 核心：加载与恢复状态 ---
+    function loadData() {
+        const saved = localStorage.getItem('ayan_study_room_v2_5'); // 更新存储键名以防冲突
+        if (saved) {
+            data = JSON.parse(saved);
+            // 跨天重置
+            if (data.lastDate !== new Date().toDateString()) {
+                data.habits = {};
+                data.todayTime = 0;
+                data.lastDate = new Date().toDateString();
+                // 如果跨天了但计时器还在跑，强制重置计时器
+                if (data.timerState.isTiming) {
+                    resetTimerState();
+                }
+                saveData();
+            }
+        }
+
+        renderUI();
+
+        // ★★★ 恢复计时器状态 ★★★
+        if (data.timerState.isTiming) {
+            resumeTimer();
+        } else {
+            // 如果没有在计时，确保UI是初始状态
+            switchMode(data.timerState.mode || 'countdown');
+        }
+    }
+
+    function saveData() {
+        localStorage.setItem('ayan_study_room_v2_5', JSON.stringify(data));
+        renderUI();
+    }
+
+    // 恢复计时器的核心逻辑
+    function resumeTimer() {
+        isTiming = true;
+        currentMode = data.timerState.mode;
+        
+        // 恢复UI显示
+        switchMode(currentMode, true); // true表示是恢复模式，不重置显示
+        document.getElementById('btn-start').style.display = 'none';
+        
+        if (currentMode === 'countdown') {
+            endTime = data.timerState.endTimeTs;
+            document.getElementById('btn-giveup').style.display = 'inline-block';
+            document.getElementById('input-area').style.display = 'none';
+            document.getElementById('countdown-doing-msg').style.display = 'block';
+            // 检查是否已经过期
+            if (new Date().getTime() > endTime) {
+                finishCountdown();
+                return;
+            }
+        } else {
+            startTime = data.timerState.startTimeTs;
+            document.getElementById('btn-stop').style.display = 'inline-block';
+            document.getElementById('countup-start-msg').style.display = 'none';
+            document.getElementById('countup-doing-msg').style.display = 'block';
+        }
+
+        // 立即启动定时器
+        updateTimer(); 
+        timerInterval = setInterval(updateTimer, 1000);
+    }
+
+
+    function renderUI() {
+        document.getElementById('today-time').innerText = data.todayTime;
+        document.getElementById('total-accumulated-time').innerText = data.totalAccumulatedTime;
+        document.getElementById('points').innerText = data.points;
+
+        const todoList = document.getElementById('todo-list');
+        todoList.innerHTML = '';
+        data.todos.forEach((item, index) => {
+            todoList.innerHTML += `<div class="list-item"><div class="checkbox" onclick="checkTodo(${index})"></div><span class="task-text">${item}</span><button class="btn" style="padding:5px 10px;font-size:12px;background:#eee" onclick="delTodo(${index}, 'todo')">✕</button></div>`;
+        });
+        const doneList = document.getElementById('done-list');
+        doneList.innerHTML = '';
+        data.dones.forEach((item, index) => {
+            doneList.innerHTML += `<div class="list-item"><div class="checkbox checked"></div><span class="task-text done">${item}</span><button class="btn" style="padding:5px 10px;font-size:12px;background:#eee" onclick="delTodo(${index}, 'done')">✕</button></div>`;
+        });
+
+        const habitList = document.getElementById('habit-list');
+        habitList.innerHTML = '';
+        habitConfig.forEach(h => {
+            const isDone = data.habits[h.id];
+            habitList.innerHTML += `<div class="habit-item ${isDone ? 'done' : ''}" onclick="toggleHabit('${h.id}')"><span class="habit-icon">${h.icon}</span><span class="habit-name">${h.name}</span></div>`;
+        });
+
+        const shopList = document.getElementById('shop-list');
+        shopList.innerHTML = '';
+        shopConfig.forEach(item => {
+            shopList.innerHTML += `<div class="shop-item"><span>${item.name}</span><button class="btn" style="background:${data.points >= item.cost ? 'var(--pink)' : '#ccc'}; color:#fff; font-size:12px; padding:8px 15px;" onclick="buyItem('${item.name}', ${item.cost})">兑换 ${item.cost}🌸</button></div>`;
+        });
+    }
+
+    // --- 计时器逻辑 ---
+    function switchMode(mode, isResuming = false) {
+        if (isTiming && !isResuming) { alert("正在专注中，不能切换哦~"); return; }
+        currentMode = mode;
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('tab-' + mode).classList.add('active');
+        
+        document.getElementById('mode-countdown').style.display = mode === 'countdown' ? 'block' : 'none';
+        document.getElementById('mode-countup').style.display = mode === 'countup' ? 'block' : 'none';
+        if (!isResuming) document.getElementById('timer-display').innerText = "00:00";
+    }
+
+    function startTimer() {
+        if (isTiming) return;
+        const now = new Date().getTime();
+        
+        data.timerState.isTiming = true;
+        data.timerState.mode = currentMode;
+
+        if (currentMode === 'countdown') {
+            const minutes = parseInt(document.getElementById('focus-minutes').value);
+            if (!minutes || minutes <= 0) return alert("请输入正确时间哦~");
+            endTime = now + minutes * 60 * 1000;
+            
+            // 保存状态
+            data.timerState.endTimeTs = endTime;
+            data.timerState.initialMinutes = minutes;
+
+            document.getElementById('btn-giveup').style.display = 'inline-block';
+            document.getElementById('input-area').style.display = 'none';
+            document.getElementById('countdown-doing-msg').style.display = 'block';
+        } else {
+            startTime = now;
+            // 保存状态
+            data.timerState.startTimeTs = startTime;
+
+            document.getElementById('btn-stop').style.display = 'inline-block';
+            document.getElementById('countup-start-msg').style.display = 'none';
+            document.getElementById('countup-doing-msg').style.display = 'block';
+        }
+
+        saveData(); // 立即保存状态到保险柜
+
+        isTiming = true;
+        document.getElementById('btn-start').style.display = 'none';
+        timerInterval = setInterval(updateTimer, 1000);
+        showQuote("开始专注啦！即使关闭页面，阿宴也在计时哦。");
+    }
+
+    function updateTimer() {
+        const now = new Date().getTime();
+        if (currentMode === 'countdown') {
+            const distance = endTime - now;
+            if (distance < 0) { finishCountdown(); }
+            else {
+                const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const s = Math.floor((distance % (1000 * 60)) / 1000);
+                document.getElementById('timer-display').innerText = `${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
+            }
+        } else {
+            const elapsed = now - startTime;
+            const m = Math.floor((elapsed % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((elapsed % (1000 * 60)) / 1000);
+            document.getElementById('timer-display').innerText = `${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
+        }
+    }
+
+    function finishCountdown() {
+        clearInterval(timerInterval);
+        resetTimerState(); // 清除计时状态
+        resetTimerUI();
+
+        let minutes = data.timerState.initialMinutes || parseInt(document.getElementById('focus-minutes').value);
+        // 如果是从恢复状态结束的，需要重新读取初始分钟数
+        if (!minutes) minutes = 25; 
+
+        addTimeAndPoints(minutes, 2);
+        showQuote(`专注完成！\n手腕疼不疼？快活动一下！`);
+    }
+
+    function stopTimer() {
+        clearInterval(timerInterval);
+        const now = new Date().getTime();
+        const minutes = Math.floor((now - startTime) / (1000 * 60));
+        
+        resetTimerState(); // 清除计时状态
+        resetTimerUI();
+
+        if (minutes > 0) {
+            const points = Math.floor(minutes / 10);
+            addTimeAndPoints(minutes, points);
+            showQuote(`你专注了 ${minutes} 分钟！\n太棒了！获得 ${points} 朵小红花！`);
+        } else {
+            showQuote("时间太短啦，还没进入状态呢~");
+        }
+    }
+
+    function resetTimer() {
+        clearInterval(timerInterval);
+        resetTimerState(); // 清除计时状态
+        resetTimerUI();
+        alert("放弃啦？没关系，休息一下再来。");
+    }
+
+    // 重置计时器的状态数据
+    function resetTimerState() {
+        isTiming = false;
+        data.timerState = {
+            isTiming: false,
+            mode: 'countdown',
+            endTimeTs: null,
+            startTimeTs: null,
+            initialMinutes: 25
+        };
+        saveData();
+    }
+
+    // 重置计时器的UI
+    function resetTimerUI() {
+        document.getElementById('timer-display').innerText = "00:00";
+        document.getElementById('btn-start').style.display = 'inline-block';
+        document.getElementById('btn-stop').style.display = 'none';
+        document.getElementById('btn-giveup').style.display = 'none';
+        
+        // 恢复输入框和提示语显示
+        document.getElementById('input-area').style.display = 'block';
+        document.getElementById('countdown-doing-msg').style.display = 'none';
+        document.getElementById('countup-start-msg').style.display = 'block';
+        document.getElementById('countup-doing-msg').style.display = 'none';
+    }
+
+    function addTimeAndPoints(mins, pts) {
+        data.todayTime += mins;
+        data.totalAccumulatedTime += mins;
+        data.points += pts;
+        saveData();
+    }
+
+    function addTodo() {
+        const input = document.getElementById('todo-input');
+        if (input.value.trim()) {
+            data.todos.push(input.value);
+            input.value = '';
+            saveData();
+        }
+    }
+    function checkTodo(index) {
+        const item = data.todos.splice(index, 1)[0];
+        data.dones.unshift(item);
+        data.points += 1;
+        saveData();
+        showRandomQuote();
+    }
+    function delTodo(index, type) {
+        if (type === 'todo') data.todos.splice(index, 1);
+        else data.dones.splice(index, 1);
+        saveData();
+    }
+    function toggleHabit(id) {
+        if (data.habits[id]) return;
+        data.habits[id] = true;
+        data.points += 1;
+        saveData();
+        if (id === 'leg') showQuote("腿放平！坐姿端正，才是优雅的大将军！");
+        else if (id === 'walk') showQuote("抬头挺胸！核心收紧！");
+        else showRandomQuote();
+    }
+    function buyItem(name, cost) {
+        if (data.points >= cost) {
+            if(confirm(`确定兑换【${name}】吗？`)) {
+                data.points -= cost;
+                saveData();
+                showQuote(`兑换成功！\n【${name}】到手啦！\n快去找阿宴兑现！`);
+            }
+        } else {
+            alert("小红花不够哦~");
+        }
+    }
+
+    function showRandomQuote() { showQuote(quotes[Math.floor(Math.random() * quotes.length)]); }
+    function showQuote(text) {
+        document.getElementById('quote-text').innerText = text;
+        document.getElementById('modal').style.display = 'flex';
+    }
+    function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+    // 启动！
+    loadData();
+</script>
+</body>
+</html>
